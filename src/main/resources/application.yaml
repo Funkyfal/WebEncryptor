@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: WebEncryptor
+  banner:
+    location: config/banner.txt
