@@ -11,10 +11,7 @@ import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Security;
+import java.security.*;
 import java.util.Base64;
 
 @Service
@@ -32,7 +29,6 @@ public class CryptoServiceImpl implements CryptoService {
             log.info("Bee2 provider already present");
         }
     }
-
 
     @Override
     public String encryptBytes(String providerAlgorithmName, byte[] key, byte[] iv, byte[] plaintext) {
@@ -80,7 +76,7 @@ public class CryptoServiceImpl implements CryptoService {
             }
             return cipher;
         } catch (GeneralSecurityException e) {
-            log.error("Failed getCipher for " + algName, e);
+            log.error("Failed getCipher for {}", algName, e);
             throw new RuntimeException("Failed to create/init cipher for " + algName + ": " + e.getMessage(), e);
         }
     }
