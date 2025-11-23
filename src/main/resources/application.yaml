@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: WebEncryptor
+  banner:
+    location: config/banner.txt
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        web: INFO
