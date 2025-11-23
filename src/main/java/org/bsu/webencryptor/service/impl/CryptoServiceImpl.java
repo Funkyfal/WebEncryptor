@@ -8,9 +8,15 @@ import org.bsu.webencryptor.service.CryptoService;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.*;
 import java.util.Base64;
 
@@ -50,6 +56,38 @@ public class CryptoServiceImpl implements CryptoService {
             throw new RuntimeException("Decryption failed: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public File encryptFileStream(String algName, byte[] key, byte[] iv, InputStream in) throws IOException {
+        Cipher cipher = getCipher(algName, Cipher.ENCRYPT_MODE, key, iv);
+        File outFile = File.createTempFile("enc-", ".bin");
+        outFile.deleteOnExit();
+        try (CipherOutputStream cos = new CipherOutputStream(new FileOutputStream(outFile), cipher)) {
+            byte[] buffer = new byte[8192];
+            int r;
+            while ((r = in.read(buffer)) != -1) {
+                cos.write(buffer, 0, r);
+            }
+        }
+        return outFile;
+    }
+
+    @Override
+    public File decryptFileStream(String algName, byte[] key, byte[] iv, InputStream in) throws IOException {
+        Cipher cipher = getCipher(algName, Cipher.DECRYPT_MODE, key, iv);
+        File outFile = File.createTempFile("dec-", ".bin");
+        outFile.deleteOnExit();
+        try (CipherInputStream cis = new CipherInputStream(in, cipher);
+             FileOutputStream fos = new FileOutputStream(outFile)) {
+            byte[] buffer = new byte[8192];
+            int r;
+            while ((r = cis.read(buffer)) != -1) {
+                fos.write(buffer, 0, r);
+            }
+        }
+        return outFile;
+    }
+
 
     @Override
     public Cipher getCipher(String algName, int mode, byte[] key, byte[] iv) {
