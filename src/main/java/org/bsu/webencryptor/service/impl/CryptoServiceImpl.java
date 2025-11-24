@@ -37,7 +37,7 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     @Override
-    public String encryptBytes(String providerAlgorithmName, byte[] key, byte[] iv, byte[] plaintext) {
+    public String encryptBeltCtrBytes(String providerAlgorithmName, byte[] key, byte[] iv, byte[] plaintext) {
         try {
             Cipher cipher = getCipher(providerAlgorithmName, Cipher.ENCRYPT_MODE, key, iv);
             byte[] ct = cipher.doFinal(plaintext);
@@ -48,7 +48,7 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     @Override
-    public byte[] decryptBytes(String providerAlgorithmName, byte[] key, byte[] iv, byte[] ciphertext) {
+    public byte[] decryptBeltCtrBytes(String providerAlgorithmName, byte[] key, byte[] iv, byte[] ciphertext) {
         try {
             Cipher cipher = getCipher(providerAlgorithmName, Cipher.DECRYPT_MODE, key, iv);
             return cipher.doFinal(ciphertext);
@@ -58,7 +58,7 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     @Override
-    public File encryptFileStream(String algName, byte[] key, byte[] iv, InputStream in) throws IOException {
+    public File encryptBeltCtrFileStream(String algName, byte[] key, byte[] iv, InputStream in) throws IOException {
         Cipher cipher = getCipher(algName, Cipher.ENCRYPT_MODE, key, iv);
         File outFile = File.createTempFile("enc-", ".bin");
         outFile.deleteOnExit();
@@ -73,7 +73,7 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     @Override
-    public File decryptFileStream(String algName, byte[] key, byte[] iv, InputStream in) throws IOException {
+    public File decryptBeltCtrFileStream(String algName, byte[] key, byte[] iv, InputStream in) throws IOException {
         Cipher cipher = getCipher(algName, Cipher.DECRYPT_MODE, key, iv);
         File outFile = File.createTempFile("dec-", ".bin");
         outFile.deleteOnExit();
@@ -88,6 +88,29 @@ public class CryptoServiceImpl implements CryptoService {
         return outFile;
     }
 
+    @Override
+    public String encryptBeltCfbBytes(byte[] key, byte[] iv, byte[] plaintext) {
+        validateKeyIvForBelt(key, iv);
+        return encryptBeltCtrBytes("BeltCFB", key, iv, plaintext);
+    }
+
+    @Override
+    public byte[] decryptBeltCfbBytes(byte[] key, byte[] iv, byte[] ciphertext) {
+        validateKeyIvForBelt(key, iv);
+        return decryptBeltCtrBytes("BeltCFB", key, iv, ciphertext);
+    }
+
+    @Override
+    public File encryptFileStreamBeltCfb(byte[] key, byte[] iv, InputStream in) throws IOException {
+        validateKeyIvForBelt(key, iv);
+        return encryptBeltCtrFileStream("BeltCFB", key, iv, in);
+    }
+
+    @Override
+    public File decryptFileStreamBeltCfb(byte[] key, byte[] iv, InputStream in) throws IOException {
+        validateKeyIvForBelt(key, iv);
+        return decryptBeltCtrFileStream("BeltCFB", key, iv, in);
+    }
 
     @Override
     public Cipher getCipher(String algName, int mode, byte[] key, byte[] iv) {
@@ -127,6 +150,15 @@ public class CryptoServiceImpl implements CryptoService {
     @Override
     public String encodeBase64(byte[] data) {
         return Base64.getEncoder().encodeToString(data);
+    }
+
+    private void validateKeyIvForBelt(byte[] key, byte[] iv) {
+        if (key == null || key.length != 32) {
+            throw new IllegalArgumentException("Belt requires 32-byte key (256 bits)");
+        }
+        if (iv == null || iv.length != 16) {
+            throw new IllegalArgumentException("Belt modes require 16-byte IV (128 bits)");
+        }
     }
 
     private String keyAlgorithmFromCipherName(String algName) {

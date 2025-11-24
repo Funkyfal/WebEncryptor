@@ -9,26 +9,26 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@Tag(name = "Crypto Controller", description = "Provides API via Bee2 library")
+@Tag(name = "CTR Controller", description = "Provides API for CTR")
 @RequestMapping("/crypto")
-public interface CryptoController {
+public interface CTRController {
 
-    @Operation(description = "Encrypt text message.")
+    @Operation(description = "Encrypt text message with CTR")
     @PostMapping("/encrypt")
     ResponseEntity<?> encrypt(@RequestBody EncryptRequest req);
 
-    @Operation(description = "Decrypt text message.")
+    @Operation(description = "Decrypt text message with CTR.")
     @PostMapping("/decrypt")
     ResponseEntity<?> decrypt(@RequestBody DecryptRequest req);
 
-    @Operation(description = "Encrypt file.")
+    @Operation(description = "Encrypt file with CTR.")
     @PostMapping(value = "/encrypt-file-stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<?> encryptFileStream(@RequestParam String algorithm,
                                         @RequestParam String keyBase64,
                                         @RequestParam(required = false) String ivBase64,
                                         @RequestPart("file") MultipartFile file);
 
-    @Operation(description = "Decrypt file.")
+    @Operation(description = "Decrypt file with CTR.")
     @PostMapping(value = "/decrypt-file-stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<?> decryptFileStream(@RequestParam String algorithm,
                                         @RequestParam String keyBase64,
