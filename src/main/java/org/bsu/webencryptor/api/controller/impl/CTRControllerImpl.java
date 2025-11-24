@@ -43,7 +43,7 @@ public class CTRControllerImpl implements CTRController {
     public ResponseEntity<?> decrypt(DecryptRequest req) {
         try {
             byte[] key = controllerUtils.decodeBase64(req.getKeyBase64());
-            byte[] iv  = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
+            byte[] iv = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
 
             byte[] ciphertext = controllerUtils.decodeBase64(req.getCiphertextBase64());
             byte[] decryptedBytes = CTRService.decryptBeltCtrBytes(req.getAlgorithm(), key, iv, ciphertext);

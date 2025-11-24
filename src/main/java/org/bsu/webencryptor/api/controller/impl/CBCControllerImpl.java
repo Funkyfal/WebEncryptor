@@ -43,7 +43,7 @@ public class CBCControllerImpl implements CBCController {
     public ResponseEntity<?> decryptBeltCbc(DecryptRequest req) {
         try {
             byte[] key = controllerUtils.decodeBase64(req.getKeyBase64());
-            byte[] iv  = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
+            byte[] iv = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
             byte[] ciphertext = controllerUtils.decodeBase64(req.getCiphertextBase64());
             byte[] decryptedBytes = cbcService.decryptBeltCbcBytes(key, iv, ciphertext);
             String decryptedText = new String(decryptedBytes, StandardCharsets.UTF_8);
