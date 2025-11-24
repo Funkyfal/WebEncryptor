@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bsu.webencryptor.api.controller.CTRController;
 import org.bsu.webencryptor.api.dto.DecryptRequest;
 import org.bsu.webencryptor.api.dto.EncryptRequest;
-import org.bsu.webencryptor.service.CryptoService;
+import org.bsu.webencryptor.service.CTRService;
 import org.bsu.webencryptor.util.ControllerUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -24,15 +24,15 @@ import java.util.Map;
 public class CTRControllerImpl implements CTRController {
 
     private final ControllerUtils controllerUtils;
-    private final CryptoService cryptoService;
+    private final CTRService CTRService;
 
     @Override
     public ResponseEntity<?> encrypt(@RequestBody EncryptRequest req) {
         try {
-            byte[] key = cryptoService.decodeBase64(req.getKeyBase64());
-            byte[] iv = req.getIvBase64() == null ? null : cryptoService.decodeBase64(req.getIvBase64());
+            byte[] key = controllerUtils.decodeBase64(req.getKeyBase64());
+            byte[] iv = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
             byte[] plain = req.getPlaintext().getBytes(StandardCharsets.UTF_8);
-            String ciphertextB64 = cryptoService.encryptBeltCtrBytes(req.getAlgorithm(), key, iv, plain);
+            String ciphertextB64 = CTRService.encryptBeltCtrBytes(req.getAlgorithm(), key, iv, plain);
             return ResponseEntity.ok(Map.of("ciphertext", ciphertextB64));
         } catch (RuntimeException e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
@@ -42,11 +42,11 @@ public class CTRControllerImpl implements CTRController {
     @Override
     public ResponseEntity<?> decrypt(DecryptRequest req) {
         try {
-            byte[] key = cryptoService.decodeBase64(req.getKeyBase64());
-            byte[] iv  = req.getIvBase64() == null ? null : cryptoService.decodeBase64(req.getIvBase64());
+            byte[] key = controllerUtils.decodeBase64(req.getKeyBase64());
+            byte[] iv  = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
 
-            byte[] ciphertext = cryptoService.decodeBase64(req.getCiphertextBase64());
-            byte[] decryptedBytes = cryptoService.decryptBeltCtrBytes(req.getAlgorithm(), key, iv, ciphertext);
+            byte[] ciphertext = controllerUtils.decodeBase64(req.getCiphertextBase64());
+            byte[] decryptedBytes = CTRService.decryptBeltCtrBytes(req.getAlgorithm(), key, iv, ciphertext);
             String decryptedText = new String(decryptedBytes, StandardCharsets.UTF_8);
 
             return ResponseEntity.ok(Map.of("plaintext", decryptedText));
@@ -64,9 +64,9 @@ public class CTRControllerImpl implements CTRController {
                                                String ivBase64,
                                                MultipartFile file) {
         try (InputStream in = file.getInputStream()) {
-            byte[] key = cryptoService.decodeBase64(keyBase64);
-            byte[] iv = ivBase64 == null ? null : cryptoService.decodeBase64(ivBase64);
-            File enc = cryptoService.encryptBeltCtrFileStream(algorithm, key, iv, in);
+            byte[] key = controllerUtils.decodeBase64(keyBase64);
+            byte[] iv = ivBase64 == null ? null : controllerUtils.decodeBase64(ivBase64);
+            File enc = CTRService.encryptBeltCtrFileStream(algorithm, key, iv, in);
             String newFilename = controllerUtils.addToFilename(file.getOriginalFilename(), "ENC");
 
             InputStreamResource resource = new InputStreamResource(new FileInputStream(enc));
@@ -89,9 +89,9 @@ public class CTRControllerImpl implements CTRController {
                                                String ivBase64,
                                                MultipartFile file) {
         try (InputStream in = file.getInputStream()) {
-            byte[] key = cryptoService.decodeBase64(keyBase64);
-            byte[] iv = ivBase64 == null ? null : cryptoService.decodeBase64(ivBase64);
-            File enc = cryptoService.decryptBeltCtrFileStream(algorithm, key, iv, in);
+            byte[] key = controllerUtils.decodeBase64(keyBase64);
+            byte[] iv = ivBase64 == null ? null : controllerUtils.decodeBase64(ivBase64);
+            File enc = CTRService.decryptBeltCtrFileStream(algorithm, key, iv, in);
             String newFilename = controllerUtils.addToFilename(file.getOriginalFilename(), "DEC");
 
             InputStreamResource resource = new InputStreamResource(new FileInputStream(enc));

@@ -2,6 +2,8 @@ package org.bsu.webencryptor.util;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
+
 @Component
 public class ControllerUtils {
 
@@ -18,5 +20,13 @@ public class ControllerUtils {
         String name = original.substring(0, lastDot);
         String ext = original.substring(lastDot);
         return name + textToAdd + ext;
+    }
+
+    public byte[] decodeBase64(String b64) {
+        return Base64.getDecoder().decode(b64);
+    }
+
+    public String encodeBase64(byte[] data) {
+        return Base64.getEncoder().encodeToString(data);
     }
 }

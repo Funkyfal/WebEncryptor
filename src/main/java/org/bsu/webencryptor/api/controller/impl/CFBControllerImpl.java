@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bsu.webencryptor.api.controller.CFBController;
 import org.bsu.webencryptor.api.dto.DecryptRequest;
 import org.bsu.webencryptor.api.dto.EncryptRequest;
-import org.bsu.webencryptor.service.CryptoService;
+import org.bsu.webencryptor.service.CFBService;
 import org.bsu.webencryptor.util.ControllerUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -24,15 +24,15 @@ import java.util.Map;
 public class CFBControllerImpl implements CFBController {
 
     private final ControllerUtils controllerUtils;
-    private final CryptoService cryptoService;
+    private final CFBService CFBService;
 
     @Override
     public ResponseEntity<?> encryptBeltCfb(EncryptRequest req) {
         try {
-            byte[] key = cryptoService.decodeBase64(req.getKeyBase64());
-            byte[] iv = req.getIvBase64() == null ? null : cryptoService.decodeBase64(req.getIvBase64());
+            byte[] key = controllerUtils.decodeBase64(req.getKeyBase64());
+            byte[] iv = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
             byte[] plain = req.getPlaintext().getBytes(StandardCharsets.UTF_8);
-            String ciphertextB64 = cryptoService.encryptBeltCfbBytes(key, iv, plain);
+            String ciphertextB64 = CFBService.encryptBeltCfbBytes(key, iv, plain);
             return ResponseEntity.ok(Map.of("ciphertext", ciphertextB64));
         } catch (RuntimeException e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
@@ -42,10 +42,10 @@ public class CFBControllerImpl implements CFBController {
     @Override
     public ResponseEntity<?> decryptBeltCfb(DecryptRequest req) {
         try {
-            byte[] key = cryptoService.decodeBase64(req.getKeyBase64());
-            byte[] iv  = req.getIvBase64() == null ? null : cryptoService.decodeBase64(req.getIvBase64());
-            byte[] ciphertext = cryptoService.decodeBase64(req.getCiphertextBase64());
-            byte[] decryptedBytes = cryptoService.decryptBeltCfbBytes(key, iv, ciphertext);
+            byte[] key = controllerUtils.decodeBase64(req.getKeyBase64());
+            byte[] iv  = req.getIvBase64() == null ? null : controllerUtils.decodeBase64(req.getIvBase64());
+            byte[] ciphertext = controllerUtils.decodeBase64(req.getCiphertextBase64());
+            byte[] decryptedBytes = CFBService.decryptBeltCfbBytes(key, iv, ciphertext);
             String decryptedText = new String(decryptedBytes, StandardCharsets.UTF_8);
 
             return ResponseEntity.ok(Map.of("plaintext", decryptedText));
@@ -60,9 +60,9 @@ public class CFBControllerImpl implements CFBController {
     @Override
     public ResponseEntity<?> encryptFileStreamBeltCfb(String keyBase64, String ivBase64, MultipartFile file) {
         try (InputStream in = file.getInputStream()) {
-            byte[] key = cryptoService.decodeBase64(keyBase64);
-            byte[] iv = cryptoService.decodeBase64(ivBase64);
-            File enc = cryptoService.encryptFileStreamBeltCfb(key, iv, in);
+            byte[] key = controllerUtils.decodeBase64(keyBase64);
+            byte[] iv = controllerUtils.decodeBase64(ivBase64);
+            File enc = CFBService.encryptFileStreamBeltCfb(key, iv, in);
             String newFilename = controllerUtils.addToFilename(file.getOriginalFilename(), "ENC");
             InputStreamResource resource = new InputStreamResource(new FileInputStream(enc));
             return ResponseEntity.ok()
@@ -78,9 +78,9 @@ public class CFBControllerImpl implements CFBController {
     @Override
     public ResponseEntity<?> decryptFileStreamBeltCfb(String keyBase64, String ivBase64, MultipartFile file) {
         try (InputStream in = file.getInputStream()) {
-            byte[] key = cryptoService.decodeBase64(keyBase64);
-            byte[] iv = cryptoService.decodeBase64(ivBase64);
-            File enc = cryptoService.decryptFileStreamBeltCfb(key, iv, in);
+            byte[] key = controllerUtils.decodeBase64(keyBase64);
+            byte[] iv = controllerUtils.decodeBase64(ivBase64);
+            File enc = CFBService.decryptFileStreamBeltCfb(key, iv, in);
             String newFilename = controllerUtils.addToFilename(file.getOriginalFilename(), "DEC");
             InputStreamResource resource = new InputStreamResource(new FileInputStream(enc));
             return ResponseEntity.ok()
