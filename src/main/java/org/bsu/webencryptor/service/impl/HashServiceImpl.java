@@ -137,6 +137,47 @@ public class HashServiceImpl implements HashService {
         return MessageDigest.isEqual(actual, expected);
     }
 
+    @Override
+    public String hashBash512Base64(byte[] data) {
+        byte[] out = getDigest("Bash512").digest(data);
+        return Base64.getEncoder().encodeToString(out);
+    }
+
+    @Override
+    public String hashBash512Hex(byte[] data) {
+        byte[] out = getDigest("Bash512").digest(data);
+        return bytesToHex(out);
+    }
+
+    @Override
+    public byte[] hashBash512FileStream(InputStream in) {
+        try {
+            MessageDigest md = getDigest("Bash512");
+            try (BufferedInputStream bin = new BufferedInputStream(in)) {
+                byte[] buf = new byte[8192];
+                int r;
+                while ((r = bin.read(buf)) != -1) {
+                    md.update(buf, 0, r);
+                }
+            }
+            return md.digest();
+        } catch (IOException e) {
+            throw new RuntimeException("I/O error while hashing file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean verifyBash512File(InputStream in, String hashBase64) {
+        byte[] expected;
+        try {
+            expected = Base64.getDecoder().decode(hashBase64);
+        } catch (IllegalArgumentException iae) {
+            throw new IllegalArgumentException("Provided hashBase64 is not valid Base64: " + iae.getMessage(), iae);
+        }
+        byte[] actual = hashBash512FileStream(in);
+        return MessageDigest.isEqual(actual, expected);
+    }
+
 
     private static String bytesToHex(byte[] b) {
         StringBuilder sb = new StringBuilder(b.length * 2);

@@ -86,6 +86,39 @@ public class HashControllerImpl implements HashController {
         }
     }
 
+    @Override
+    public ResponseEntity<?> bash512(HashRequest req) {
+        try {
+            byte[] data = req.getData() == null ? new byte[0] : req.getData().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            String b64 = hashService.hashBash512Base64(data);
+            String hex = hashService.hashBash512Hex(data);
+            return ResponseEntity.ok(Map.of("bash512_base64", b64, "bash512_hex", hex));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> bash512File(MultipartFile file) {
+        try (InputStream in = file.getInputStream()) {
+            byte[] hash = hashService.hashBash512FileStream(in);
+            String b64 = Base64.getEncoder().encodeToString(hash);
+            String hex = bytesToHex(hash);
+            return ResponseEntity.ok(Map.of("bash512_base64", b64, "bash512_hex", hex, "len", hash.length));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @Override
+    public ResponseEntity<?> verifyBash512File(MultipartFile file, String hashBase64) {
+        try (InputStream in = file.getInputStream()) {
+            boolean valid = hashService.verifyBash512File(in, hashBase64);
+            return ResponseEntity.ok(Map.of("valid", valid));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
 
     private static String bytesToHex(byte[] b) {
         StringBuilder sb = new StringBuilder(b.length * 2);

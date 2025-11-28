@@ -19,4 +19,13 @@ public interface HashService {
     byte[] hashBash384FileStream(InputStream in);
 
     boolean verifyBash384File(InputStream in, String hashBase64);
+
+    String hashBash512Base64(byte[] data);
+
+    String hashBash512Hex(byte[] data);
+
+    byte[] hashBash512FileStream(InputStream in);
+
+    boolean verifyBash512File(InputStream in, String hashBase64);
+
 }
