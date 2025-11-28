@@ -24,4 +24,17 @@ public interface HashController {
     @PostMapping(value = "/bash256/verify-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<?> verifyBash256File(@RequestPart("file") MultipartFile file,
                                         @RequestParam("hashBase64") String hashBase64);
+
+    @PostMapping("/bash384")
+    @Operation(description = "Returns Bash384 hash in Base64 and HEX formats.")
+    ResponseEntity<?> bash384(@RequestBody HashRequest req);
+
+    @Operation(description = "Uploads file and returns its Bash384 hash in Base64 & HEX.")
+    @PostMapping(value = "/bash384-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> bash384File(@RequestPart("file") MultipartFile file);
+
+    @Operation(description = "Uploads file and compares its Bash384 hash with provided Base64 value.")
+    @PostMapping(value = "/bash384/verify-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> verifyBash384File(@RequestPart("file") MultipartFile file,
+                                        @RequestParam("hashBase64") String hashBase64);
 }
