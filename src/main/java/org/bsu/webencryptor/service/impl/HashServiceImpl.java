@@ -178,6 +178,49 @@ public class HashServiceImpl implements HashService {
         return MessageDigest.isEqual(actual, expected);
     }
 
+    // --- BELT HASH methods ---
+
+    @Override
+    public String hashBeltBase64(byte[] data) {
+        byte[] out = getDigest("BeltHash").digest(data);
+        return Base64.getEncoder().encodeToString(out);
+    }
+
+    @Override
+    public String hashBeltHex(byte[] data) {
+        byte[] out = getDigest("BeltHash").digest(data);
+        return bytesToHex(out);
+    }
+
+    @Override
+    public byte[] hashBeltFileStream(InputStream in) {
+        try {
+            MessageDigest md = getDigest("BeltHash");
+            try (BufferedInputStream bin = new BufferedInputStream(in)) {
+                byte[] buf = new byte[8192];
+                int r;
+                while ((r = bin.read(buf)) != -1) {
+                    md.update(buf, 0, r);
+                }
+            }
+            return md.digest();
+        } catch (IOException e) {
+            throw new RuntimeException("I/O error while hashing file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean verifyBeltFile(InputStream in, String hashBase64) {
+        byte[] expected;
+        try {
+            expected = Base64.getDecoder().decode(hashBase64);
+        } catch (IllegalArgumentException iae) {
+            throw new IllegalArgumentException("Provided hashBase64 is not valid Base64: " + iae.getMessage(), iae);
+        }
+        byte[] actual = hashBeltFileStream(in);
+        return MessageDigest.isEqual(actual, expected);
+    }
+
 
     private static String bytesToHex(byte[] b) {
         StringBuilder sb = new StringBuilder(b.length * 2);

@@ -51,4 +51,18 @@ public interface HashController {
     ResponseEntity<?> verifyBash512File(@RequestPart("file") MultipartFile file,
                                         @RequestParam("hashBase64") String hashBase64);
 
+    @PostMapping("/belt")
+    @Operation(description = "Returns BeltHash in Base64 and HEX formats.")
+    ResponseEntity<?> belt(@RequestBody HashRequest req);
+
+    @Operation(description = "Uploads file and returns its BeltHash in Base64 & HEX.")
+    @PostMapping(value = "/belt-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> beltFile(@RequestPart("file") MultipartFile file);
+
+    @Operation(description = "Uploads file and compares its BeltHash with provided Base64 value.")
+    @PostMapping(value = "/belt/verify-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> verifyBeltFile(@RequestPart("file") MultipartFile file,
+                                     @RequestParam("hashBase64") String hashBase64);
+
+
 }

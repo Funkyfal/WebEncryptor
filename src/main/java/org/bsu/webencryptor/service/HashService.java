@@ -28,4 +28,12 @@ public interface HashService {
 
     boolean verifyBash512File(InputStream in, String hashBase64);
 
+    String hashBeltBase64(byte[] data);
+
+    String hashBeltHex(byte[] data);
+
+    byte[] hashBeltFileStream(InputStream in);
+
+    boolean verifyBeltFile(InputStream in, String hashBase64);
+
 }
