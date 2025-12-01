@@ -56,3 +56,27 @@ export function humanFileSize(bytes) {
     if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
     return (bytes/(1024*1024)).toFixed(2) + ' MB';
 }
+
+export function validateKeyIv(algorithm, keyBase64, ivBase64) {
+    const msgs = [];
+    if (!keyBase64 || keyBase64.trim().length === 0) {
+        msgs.push('Key is empty');
+    } else {
+        // base64 decode length check: 32 bytes -> 44 chars base64 (with padding)
+        if (keyBase64.length !== 44) {
+            msgs.push(`Key should be 32 bytes (Base64 length 44). Current length ${keyBase64.length}`);
+        }
+    }
+
+    const needsIv = !algorithm || !algorithm.toUpperCase().includes('ECB');
+    if (needsIv) {
+        if (!ivBase64 || ivBase64.trim().length === 0) {
+            msgs.push('IV is empty');
+        } else {
+            if (ivBase64.length !== 24) {
+                msgs.push(`IV should be 16 bytes (Base64 length 24). Current length ${ivBase64.length}`);
+            }
+        }
+    }
+    return { ok: msgs.length === 0, messages: msgs };
+}

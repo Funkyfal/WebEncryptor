@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import FileEncryptPanel from './components/FileEncryptPanel';
 import { postJson } from './api';
-import { generateBase64Key, generateBase64Iv, copyToClipboard, validateBase64LengthForAlgorithm } from './utils';
+import { generateBase64Key, generateBase64Iv, copyToClipboard, validateKeyIv } from './utils';
 
 export default function CryptoPanel() {
     const [mode, setMode] = useState('encrypt'); // encrypt / decrypt
@@ -24,8 +24,8 @@ export default function CryptoPanel() {
     }
 
     async function onExecute() {
-        const errs = validateBase64LengthForAlgorithm(algo, key, iv);
-        if (errs.length) return alert('Validation: ' + errs.join('; '));
+        const { ok, messages } = validateKeyIv(algo, key, iv);
+        if (!ok && !confirm('Validation problems:\n' + messages.join('\n') + '\n\nTry anyway?')) return;
 
         const body = {};
         if (mode === 'encrypt') {
@@ -52,18 +52,20 @@ export default function CryptoPanel() {
         } finally { setLoading(false); }
     }
 
+    const status = validateKeyIv(algo, key, iv);
+
     return (
-        <div>
+        <div className="panel">
             <h2>Crypto</h2>
 
-            <div>
-                <label><input type="radio" checked={mode==='encrypt'} onChange={()=>setMode('encrypt')} /> Encrypt</label>
-                <label style={{marginLeft:12}}><input type="radio" checked={mode==='decrypt'} onChange={()=>setMode('decrypt')} /> Decrypt</label>
+            <div className="row">
+                <label className="label"><input type="radio" checked={mode==='encrypt'} onChange={()=>setMode('encrypt')} /> Encrypt</label>
+                <label style={{marginLeft:12}} className="label"><input type="radio" checked={mode==='decrypt'} onChange={()=>setMode('decrypt')} /> Decrypt</label>
             </div>
 
-            <div style={{marginTop:10}}>
-                Algorithm:
-                <select value={algo} onChange={e=>setAlgo(e.target.value)} style={{marginLeft:8}}>
+            <div className="row">
+                <div className="label">Algorithm</div>
+                <select value={algo} onChange={e=>setAlgo(e.target.value)} className="input">
                     <option value="BeltCTR">BeltCTR</option>
                     <option value="BeltCFB">BeltCFB</option>
                     <option value="BeltCBC">BeltCBC</option>
@@ -71,38 +73,52 @@ export default function CryptoPanel() {
                 </select>
             </div>
 
-            <div style={{marginTop:10}}>
-                <textarea value={text} onChange={e=>setText(e.target.value)} rows={4} style={{width:'100%'}} placeholder={mode==='encrypt' ? 'Plaintext' : 'Ciphertext Base64'} />
+            <div className="row">
+                <textarea className="input" value={text} onChange={e=>setText(e.target.value)} rows={4} placeholder={mode==='encrypt' ? 'Plaintext' : 'Ciphertext Base64'} />
             </div>
 
-            <div style={{marginTop:8}}>
-                Key Base64:
-                <input value={key} onChange={e=>setKey(e.target.value)} size={60} style={{marginLeft:8}}/>
-                <button style={{marginLeft:6}} onClick={()=>setKey(generateBase64Key())}>Gen</button>
-                <button style={{marginLeft:6}} onClick={()=>copyToClipboard(key)}>Copy</button>
+            <div className="row">
+                <div className="label">Key Base64</div>
+                <input className="input" value={key} onChange={e=>setKey(e.target.value)} />
+                <button className="btn small secondary" onClick={()=>setKey(generateBase64Key())}>Gen</button>
+                <button className="btn small secondary" onClick={()=>copyToClipboard(key)}>Copy</button>
+            </div>
+            <div className="helper">
+                {status.messages.some(m=>m.toLowerCase().includes('key')) ? (
+                    <div className="hint-err">{status.messages.filter(m=>m.toLowerCase().includes('key')).join('; ')}</div>
+                ) : (
+                    <div className="hint-ok">Key should be 32 bytes (Base64 length 44)</div>
+                )}
             </div>
 
-            <div style={{marginTop:8}}>
-                IV Base64:
-                <input value={iv} onChange={e=>setIv(e.target.value)} size={60} style={{marginLeft:8}} disabled={algo.toUpperCase().includes('ECB')} />
-                <button style={{marginLeft:6}} onClick={()=>setIv(generateBase64Iv())} disabled={algo.toUpperCase().includes('ECB')}>Gen</button>
-                <button style={{marginLeft:6}} onClick={()=>copyToClipboard(iv)} disabled={algo.toUpperCase().includes('ECB')}>Copy</button>
+            <div className="row" style={{marginTop:6}}>
+                <div className="label">IV Base64</div>
+                <input className="input" value={iv} onChange={e=>setIv(e.target.value)} disabled={algo.toUpperCase().includes('ECB')} />
+                <button className="btn small secondary" onClick={()=>setIv(generateBase64Iv())} disabled={algo.toUpperCase().includes('ECB')}>Gen</button>
+                <button className="btn small secondary" onClick={()=>copyToClipboard(iv)} disabled={algo.toUpperCase().includes('ECB')}>Copy</button>
+            </div>
+            <div className="helper">
+                {algo.toUpperCase().includes('ECB') ? (
+                    <div className="small">ECB does not use IV</div>
+                ) : (status.messages.some(m=>m.toLowerCase().includes('iv')) ? (
+                    <div className="hint-err">{status.messages.filter(m=>m.toLowerCase().includes('iv')).join('; ')}</div>
+                ) : (
+                    <div className="hint-ok">IV should be 16 bytes (Base64 length 24)</div>
+                ))}
             </div>
 
-            <div style={{marginTop:10}}>
-                <button onClick={onExecute} disabled={loading}>{loading ? 'Working...' : (mode==='encrypt' ? 'Encrypt' : 'Decrypt')}</button>
+            <div className="row" style={{marginTop:12}}>
+                <button className="btn" onClick={onExecute} disabled={loading}>{loading? 'Working...' : (mode==='encrypt'? 'Encrypt':'Decrypt')}</button>
             </div>
 
-            <div style={{marginTop:12}}>
-                <label>Result:</label>
-                <div style={{display:'flex', gap:8, alignItems:'center', marginTop:6}}>
-                    <input readOnly value={result || ''} style={{width:'80%'}}/>
-                    <button onClick={()=>copyToClipboard(result)}>Copy</button>
-                </div>
+            <div className="result-row">
+                <label className="label">Result</label>
+                <input readOnly value={result || ''} className="input"/>
+                <button className="btn small secondary" onClick={()=>copyToClipboard(result)}>Copy</button>
             </div>
 
-            <hr style={{margin:'20px 0'}} />
-            <FileEncryptPanel maxFileSize={maxFileSize} defaultAlgorithm={algo}/>
+            <div style={{marginTop:12}} />
+            <FileEncryptPanel maxFileSize={maxFileSize} defaultAlgorithm={algo} />
         </div>
     );
 }
